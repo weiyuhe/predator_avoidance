@@ -117,6 +117,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  include
 )
 
 ## Declare a C++ library
@@ -206,3 +207,4 @@ include_directories(
 
 add_executable(get_map src/get_map.cpp)
 target_link_libraries(get_map ${catkin_LIBRARIES})
+
