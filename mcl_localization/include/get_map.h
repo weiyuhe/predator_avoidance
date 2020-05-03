@@ -7,12 +7,7 @@
 
 
 using namespace std;
-struct pointxy
-{
-	double x, y;
 
-	pointxy(double paramx, double paramy) : x(paramx), y(paramy) {}
-};
 
 class map_class
 {
@@ -21,7 +16,7 @@ private:
 	ros::Subscriber map_sub;
 	ros::NodeHandle n;
 	visualization_msgs::Marker points;
-	vector<pointxy> occupied_points;
+	//vector<pointxy> occupied_points;
 	int occupied;
 
 public:
@@ -30,5 +25,7 @@ public:
 	void map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
 	void pub_points();
+
+	vector<vector<double> > occupiedMatrix;
 
 };

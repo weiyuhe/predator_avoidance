@@ -4,6 +4,7 @@
 #include <visualization_msgs/Marker.h>
 #include <vector>
 #include "get_map.h"
+#include "kdtree.h"
 
 #define X_OFFSET 9
 #define Y_OFFSET 9.95
@@ -33,15 +34,24 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 			{
 
 				occupied++;
-				occupied_points.push_back(pointxy(x*0.1 - X_OFFSET, y*0.1 - Y_OFFSET));
-				geometry_msgs::Point p;
-				p.x = occupied_points[count].x;
-				p.y = occupied_points[count].y;
-				p.z = 0.1;
-				points.points.push_back(p);
+				
 				//ROS_INFO("Number of occupied is: %i", occupied);
 				//ROS_INFO("map data index: ", msg->data[x+ info.width * y]);
+				
+
+				vector<double> row;
+				row.push_back(x*0.1 - X_OFFSET);
+				row.push_back(y*0.1 - Y_OFFSET);
+				occupiedMatrix.push_back(row);
+
+				geometry_msgs::Point p;
+				p.x = occupiedMatrix[count][0];
+				p.y = occupiedMatrix[count][1];
+				p.z = 0.1;
+				points.points.push_back(p);
+
 				count += 1;
+
 			}
 		}
 	}
@@ -75,8 +85,19 @@ void map_class::pub_points()
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "get_map");
-
-	map_class mapclass;
+	 vector<vector<double> > test_map{	{ 1, 2 },
+										{ 4, 5 },
+										{ 7, 4 },
+										{ 3, 8 },
+										{ 8, 9 },
+										{10, 15},
+										{ 2, 7 },
+										{20, 18}};
+	//map_class mapclass;
+	/*kdtree mytree;
+	kdtree.construct(map);*/
+	kdtree mytree;
+	mytree.construct(test_map);
 
 	ros::spin();
 	return 0;
