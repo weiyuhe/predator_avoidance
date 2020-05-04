@@ -200,7 +200,7 @@ kdtree::~kdtree()
 
 void kdtree::delete_recursive(Node *node)
 {
-	if (node != NULL)
+	if (node != nullptr)
 	{
 		delete_recursive(node->right);
 		delete_recursive(node->left);
