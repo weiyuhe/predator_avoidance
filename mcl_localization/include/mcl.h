@@ -11,5 +11,6 @@ public:
 	void predictionUpdate();
 	void measurementUpdate();
 	void resampling();
+	void odom_to_map();
 
 };
