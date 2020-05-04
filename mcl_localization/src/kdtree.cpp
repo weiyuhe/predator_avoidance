@@ -22,7 +22,8 @@ void kdtree::construct(vector<vector<double> > map)
 	//vector<int>::iterator middleItr(map.begin() + map.size() / 2);
 	vector<vector<double> >::iterator middleItr(map.begin() + midIndex);
 
-	for (auto it = map.begin(); it != map.end(); ++it) {
+	for (auto it = map.begin(); it != map.end(); ++it) 
+	{
 		if (distance(it, middleItr) > 0) //std::distance
 			left.push_back(*it);
 		else
@@ -53,33 +54,23 @@ Node *kdtree::construcRecursive( vector<vector<double> > sub_map, int depth)
 	if(size == 1) // leaf, end recursion
 	{
 		Node *node = new Node;
-		node->axis = depth;
+		node->axis = depth%2;
 		node->left = nullptr;
 		node->right = nullptr;
 		node->xy = sub_map[0];
-		cout<<"leaf x: "<<sub_map[0][0]<<" leaf y: "<<sub_map[0][1]<<endl;
+		leaf_count += 1;
+		//cout<<"leaf count: "<< leaf_count<<endl;
+		//cout<<"leaf x: "<<sub_map[0][0]<<" leaf y: "<<sub_map[0][1]<<endl;
 		return node;
 	}
-	else if(size == 2){
-
-	}
-
-	if(depth%2 == 0) //if axis is X
-	{
-		//sort(sub_map.begin(), sub_map.end(),&kdtree::compareX);
-		sort(sub_map.begin(), sub_map.end(), [](const vector<double>& v1, const vector<double>& v2)
-		{ 
-			return v1[0] < v2[0]; 
-		});
-	}
-	else 			//if axis is Y
-	{
-		//sort(sub_map.begin(), sub_map.end(),&kdtree::compareY);
-		sort(sub_map.begin(), sub_map.end(), [](const vector<double>& v1, const vector<double>& v2)
-		{ 
-			return v1[1] < v2[1]; 
-		});
-	}
+	int dimension = depth%2;
+	
+	//sort(sub_map.begin(), sub_map.end(),&kdtree::compareX);
+	sort(sub_map.begin(), sub_map.end(), [dimension](const vector<double>& v1, const vector<double>& v2)
+	{ 
+		return v1[dimension] < v2[dimension]; 
+	});
+	
 	
 	int midIndex = size / 2;
 
@@ -99,99 +90,108 @@ Node *kdtree::construcRecursive( vector<vector<double> > sub_map, int depth)
 	if(size == 2)
 	{
 		Node *node = new Node;
-		node->axis = depth;
+		node->axis = depth%2;
 		node->left = construcRecursive(left, depth+1);
 		node->right = nullptr;
 		node->xy = sub_map[midIndex];
 		return node;
 	}
 
-	/*vector<vector<double> >::iterator rightIT;
-	rightIT = right.begin(); 
-	right.erase(rightIT); */
-
     right.erase(right.begin());
 
 	Node *node = new Node;
-	node->axis = depth;
+	node->axis = depth%2;
 	node->left = construcRecursive( left, depth + 1);
 	node->right = construcRecursive( right, depth + 1);
 	node->xy =  sub_map[midIndex];
 	return node;
 }
 
-/*void kdtree::insert(pointxy point)
+//Pseudo algorithm: page 9 on https://www.ri.cmu.edu/pub_files/pub1/moore_andrew_1991_1/moore_andrew_1991_1.pdf
+NNpoint kdtree::nearestNeighbor(vector<double> target_point)
 {
-	vector<double> xydata{point.x, point.y}; 
-	if(root == NULL)
-	{
-		root = new Node;
-		root->axis = 0;
-		root->left = NULL;
-		root->right = NULL;
-		root->xy =  xydata;
-	}
-	else
-	{
-		insert_recursive(root, point, 0);
-	}
+	target = target_point;
+	double max = numeric_limits<double>::max();
+	return kdtree::nearestRecursive(root, max);
 }
 
-//*node is the prev node that you need to compare
-Node *kdtree::insert_recursive(Node *node, pointxy point, int depth){
-	vector<double> xydata{point.x, point.y}; 
-	if (node == NULL) //creates new node
+NNpoint kdtree::nearestRecursive(Node *node, double max_dist)
+{
+	NNpoint nnpoint;
+	vector<double> nearestPoint;
+	double nearestDist;
+	Node *nearestNode;
+	Node *furtherNode;
+
+
+	if(node == nullptr)
 	{
-		node = new Node;
-		node->axis = 0;
-		node->left = NULL;
-		node->right = NULL;
-		node->xy =  xydata;
+		nnpoint.nearest_dist = numeric_limits<double>::max();
+		nnpoint.nearest_point = nearestPoint;
+		return nnpoint;
+	}
+
+	int split = node->axis;
+	vector<double> pivot = node->xy;
+
+	if(target[split] <= pivot[split])
+	{
+		nearestNode = node->left;
+		furtherNode = node->right;
 	}
 	else
 	{
-
-		int axis = depth%2 == 0 ? 0 : 1;
-		if(xydata[axis] < node->xy[axis])
-		{
-			node->left = insert_recursive(node->left, point, node->axis + 1);
-		}
-		else
-		{
-			node->right = insert_recursive(node->right, data, node->axis + 1);
-		}
-
+		nearestNode = node->right;
+		furtherNode = node->left;
 	}
 
-	return node;
+	nnpoint = nearestRecursive(nearestNode, max_dist);
+	nearestPoint = nnpoint.nearest_point;
+	nearestDist = nnpoint.nearest_dist;
 
-}*/
-
-
-/*pointxy kdtree::nearestPoint(pointxy point)
-{
-	if (root == NULL)
+	if(nearestDist < max_dist)
 	{
-		cout<<"Root is NULL, returning original point! "<<endl;
-		return point;
+		max_dist = nearestDist;
 	}
 
+	double check_dist = fabs(pivot[split] - target[split]);
+	if(max_dist <= check_dist )// < ?
+	{
+		return nnpoint;
+	}
 
+	double dist = calcDistance(pivot, target);
 
-}*/
+	if(dist < nearestDist)
+	{
+		nearestPoint = pivot;
+		nearestDist = dist;
+		max_dist = nearestDist;
+	}
 
+	NNpoint nnpointFar = nearestRecursive(furtherNode, max_dist);
+	if(nnpointFar.nearest_dist < nearestDist)
+	{
+		nearestDist = nnpointFar.nearest_dist;
+		nearestPoint = nnpointFar.nearest_point;
 
-/*bool kdtree::compareX(const vector<double>& v1, const vector<double>& v2)
-{ 
-	return v1[0] < v2[0]; 
-} 
+	}
 
-bool kdtree::compareY(const vector<double>& v1, const vector<double>& v2)
-{ 
-	return v1[1] < v2[1]; 
-} */
+	NNpoint result;
+	result.nearest_dist = nearestDist;
+	result.nearest_point = nearestPoint;
+	return result;
 
+}
 
+double kdtree::calcDistance(vector<double> A, vector<double> B)
+{
+	double dx = A[0] - B[0]; 
+	double dy = A[1] - B[1];
+	double dist;
+	dist = sqrt(pow(dx, 2) + pow(dy, 2));                  
+	return dist;
+}
 
 kdtree::~kdtree() 
 {

@@ -20,6 +20,7 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
 	std_msgs::Header header = msg->header;
 	nav_msgs::MapMetaData info = msg->info;
+	visualization_msgs::Marker points;
 	int x;
 	int y;
 	int count = 0;
@@ -49,21 +50,43 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 				p.y = occupiedMatrix[count][1];
 				p.z = 0.1;
 				points.points.push_back(p);
+				float scale = 0.05;
 
 				count += 1;
 
 			}
 		}
 	}
-	// for visualizing points
+	
+
+	kdtree mytree;
+	mytree.construct(occupiedMatrix);
+	vector<double> testPoint{ -2, 5 };
+	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
+	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
+	cout<<" nearest distance: "<< testNNPoint.nearest_dist<<endl;
+
+	visualization_msgs::Marker points1;
+	geometry_msgs::Point p1;
+	geometry_msgs::Point p2;
+	p1.x = testPoint[0];
+	p1.y = testPoint[1];
+	p2.x = testNNPoint.nearest_point[0];
+	p2.y = testNNPoint.nearest_point[1];
+	p1.z = p2.z = 0.1;
+	points1.points.push_back(p1);
+	points1.points.push_back(p2);
+	float scale = 0.2;
+
+
 	while(ros::ok())
 	{
-		pub_points();
+		pub_points(points1, scale);
 	}
 
 }
 
-void map_class::pub_points()
+void map_class::pub_points(visualization_msgs::Marker points, float scale)
 {
 	points.header.frame_id  = "/map";
 	points.header.stamp = ros::Time::now();
@@ -72,8 +95,8 @@ void map_class::pub_points()
 	points.pose.orientation.w  = 1.0;
 	//points.id = 0;
 	points.type = visualization_msgs::Marker::POINTS;
-	points.scale.x = 0.05;
-	points.scale.y = 0.05;
+	points.scale.x = scale;
+	points.scale.y = scale;
 	points.color.g = 1.0f;
 	points.color.a = 1.0;
 	marker_pub.publish(points);
@@ -85,7 +108,8 @@ void map_class::pub_points()
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "get_map");
-	 vector<vector<double> > test_map{	{ 1, 2 },
+	map_class mapclass;
+	/*vector<vector<double> > test_map{	{ 1, 2 },
 										{ 4, 5 },
 										{ 7, 4 },
 										{ 3, 8 },
@@ -93,11 +117,10 @@ int main(int argc, char **argv)
 										{10, 15},
 										{ 2, 7 },
 										{20, 18}};
-	//map_class mapclass;
-	/*kdtree mytree;
-	kdtree.construct(map);*/
+	
+
 	kdtree mytree;
-	mytree.construct(test_map);
+	mytree.construct(test_map);*/
 
 	ros::spin();
 	return 0;

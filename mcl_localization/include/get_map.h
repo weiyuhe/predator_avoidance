@@ -15,7 +15,7 @@ private:
 	ros::Publisher marker_pub;
 	ros::Subscriber map_sub;
 	ros::NodeHandle n;
-	visualization_msgs::Marker points;
+	//visualization_msgs::Marker points;
 	//vector<pointxy> occupied_points;
 	int occupied;
 
@@ -24,7 +24,7 @@ public:
 	
 	void map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
-	void pub_points();
+	void pub_points(visualization_msgs::Marker points, float scale);
 
 	vector<vector<double> > occupiedMatrix;
 

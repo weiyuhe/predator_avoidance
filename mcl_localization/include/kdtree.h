@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -15,10 +16,19 @@ struct Node
 	int axis;
 };
 
+struct NNpoint
+{
+	double nearest_dist;
+	vector<double> nearest_point;
+};
+
 
 class kdtree
 {
 private:
+	int leaf_count = 0;
+	vector<double> target;
+
 
 public:
 	kdtree();
@@ -29,7 +39,9 @@ public:
 	/*pointxy nearestPoint(pointxy point);*/
 /*	bool compareX(const vector<double>& v1, const vector<double>& v2);
 	bool compareY(const vector<double>& v1, const vector<double>& v2);*/
-	//double distance();
+	double calcDistance(vector<double> A, vector<double> B);
+	NNpoint nearestNeighbor(vector<double> target_point);
+	NNpoint nearestRecursive(Node *node, double max_dist);
 	void delete_recursive(Node *node);
 	~kdtree();
 
