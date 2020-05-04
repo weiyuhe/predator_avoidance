@@ -155,9 +155,9 @@ NNpoint kdtree::nearestRecursive(Node *node, double max_dist)
 	}
 
 	double check_dist = fabs(pivot[split] - target[split]);
-	if(max_dist <= check_dist )// < ?
+	if(max_dist <= check_dist )
 	{
-		return nnpoint;
+		return nnpoint; //if the nearest pivot is further than the currently closest point, we have found the closest point.
 	}
 
 	double dist = calcDistance(pivot, target);

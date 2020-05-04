@@ -18,9 +18,10 @@ private:
 	//visualization_msgs::Marker points;
 	//vector<pointxy> occupied_points;
 	int occupied;
+	float scale;
 
 public:
-	map_class();
+	map_class(ros::NodeHandle* nodehandle);
 	
 	void map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 

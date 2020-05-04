@@ -9,7 +9,7 @@
 #define X_OFFSET 9
 #define Y_OFFSET 9.95
 
-map_class::map_class()
+map_class::map_class(ros::NodeHandle* nodehandle):n(*nodehandle)
 {
 	occupied = 0;
 	map_sub = n.subscribe("map",2000, &map_class::map_callback,this);
@@ -50,7 +50,7 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 				p.y = occupiedMatrix[count][1];
 				p.z = 0.1;
 				points.points.push_back(p);
-				float scale = 0.05;
+				scale = 0.05;
 
 				count += 1;
 
@@ -108,7 +108,8 @@ void map_class::pub_points(visualization_msgs::Marker points, float scale)
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "get_map");
-	map_class mapclass;
+	ros::NodeHandle nh_;
+	map_class mapclass(&nh_);
 	/*vector<vector<double> > test_map{	{ 1, 2 },
 										{ 4, 5 },
 										{ 7, 4 },
