@@ -76,7 +76,7 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	p1.z = p2.z = 0.1;
 	points1.points.push_back(p1);
 	points1.points.push_back(p2);
-	float scale = 0.2;
+	scale = 0.2;
 
 
 	while(ros::ok())
