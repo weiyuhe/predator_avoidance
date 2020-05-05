@@ -61,7 +61,7 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 
 	kdtree mytree;
 	mytree.construct(occupiedMatrix);
-	vector<double> testPoint{ -2, 5 };
+	vector<double> testPoint{ 0, 5 };
 	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
 	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
 	cout<<" nearest distance: "<< testNNPoint.nearest_dist<<endl;
@@ -104,25 +104,3 @@ void map_class::pub_points(visualization_msgs::Marker points, float scale)
 	//ROS_INFO("Number of occupied is: %i", occupied);
 }
 
-
-int main(int argc, char **argv)
-{
-	ros::init(argc, argv, "get_map");
-	ros::NodeHandle nh_;
-	map_class mapclass(&nh_);
-	/*vector<vector<double> > test_map{	{ 1, 2 },
-										{ 4, 5 },
-										{ 7, 4 },
-										{ 3, 8 },
-										{ 8, 9 },
-										{10, 15},
-										{ 2, 7 },
-										{20, 18}};
-	
-
-	kdtree mytree;
-	mytree.construct(test_map);*/
-
-	ros::spin();
-	return 0;
-}

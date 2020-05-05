@@ -205,10 +205,12 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(get_map src/get_map.cpp)
-target_link_libraries(get_map ${catkin_LIBRARIES})
+add_executable(run_mcl src/main.cpp)
+target_link_libraries(run_mcl ${catkin_LIBRARIES})
 
 add_library(kdtree src/kdtree.cpp)
+add_library(get_map src/get_map.cpp)
 
 target_link_libraries(get_map kdtree)
-
+target_link_libraries(run_mcl kdtree)
+target_link_libraries(run_mcl get_map)
