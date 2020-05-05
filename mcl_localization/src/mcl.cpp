@@ -1,10 +1,12 @@
 #include "mcl.h"
+#define X_OFFSET 9
+#define Y_OFFSET 9.95
 
 mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),ymax(200),m_per_pixel(0.1)
 {
 	/*laserSub = n_.subscribe("scan",2000, &mcl::laserCallback,this);
 	odomSub = n_.subscribe("odom",2000, &mcl::odomCallback,this);*/
-	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl points", 10);
+	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	num_particles = 1500;
 
 }
@@ -23,8 +25,8 @@ void mcl::init()
 	for(int i = 0; i < num_particles; i++)
 	{
 		particle p;
-		p.x = getRand(xmin, xmax) * m_per_pixel; //in meter
-		p.y = getRand(ymin, ymax) * m_per_pixel; 
+		p.x = getRand(xmin, xmax) * m_per_pixel - X_OFFSET; //in meter
+		p.y = getRand(ymin, ymax) * m_per_pixel - Y_OFFSET; 
 		p.theta = getRand(0, 2*M_PI);
 		p.weight = 0;
 		Particles.push_back(p);
@@ -34,6 +36,7 @@ void mcl::init()
 		gp.y = p.y;
 		gp.z = 0.2;
 		visPoint.points.push_back(gp);
+		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
 	}
 

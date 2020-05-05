@@ -8,6 +8,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh_;
 	//map_class mapclass(&nh_);
 	mcl mclClass(&nh_);
+	mclClass.init();
 
 	/*vector<vector<double> > test_map{	{ 1, 2 },
 										{ 4, 5 },
