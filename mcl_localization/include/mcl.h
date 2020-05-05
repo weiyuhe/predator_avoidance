@@ -24,6 +24,7 @@ private:
 	ros::Subscriber laserSub;
 	ros::Subscriber odomSub;
 	ros::Publisher vizPoint_pub;
+	ros::Publisher vizLine_pub;
 	//ros::Publisher odomPub;
 	ros::NodeHandle n_;
 	int num_particles;
@@ -33,7 +34,8 @@ private:
 	const float ymin;
 	const float ymax;
 	const float m_per_pixel;
-	visualization_msgs::Marker visPoint;
+	visualization_msgs::Marker visPoints;
+	visualization_msgs::Marker visLines;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);
@@ -45,6 +47,7 @@ public:
 	void resampling();
 	void odom_to_map();
 	void visulizePoint(visualization_msgs::Marker points);
+	void visulizeLine(visualization_msgs::Marker line_list);
 
 };
 

@@ -9,6 +9,7 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	/*laserSub = n_.subscribe("scan",2000, &mcl::laserCallback,this);
 	odomSub = n_.subscribe("odom",2000, &mcl::odomCallback,this);*/
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
+	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
 	num_particles = 1500;
 
 }
@@ -43,7 +44,12 @@ void mcl::init()
 		gp.x = p.x;
 		gp.y = p.y;
 		gp.z = 0.2;
-		visPoint.points.push_back(gp);
+		visPoints.points.push_back(gp);
+
+		visLines.points.push_back(gp);
+		gp.x = gp.x + 0.5*cos(p.theta);
+		gp.y = gp.y + 0.5*sin(p.theta);
+		visLines.points.push_back(gp);
 
 		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
@@ -52,7 +58,8 @@ void mcl::init()
 	//visulize initial particles
 	while(ros::ok())
 	{
-		visulizePoint(visPoint);
+		//visulizePoint(visPoints);
+		visulizeLine(visLines);
 	}
 }
 
@@ -95,5 +102,18 @@ void mcl::visulizePoint(visualization_msgs::Marker points)
 	points.color.g = 1.0f;
 	points.color.a = 1.0;
 	vizPoint_pub.publish(points);
+}
 
+void mcl::visulizeLine(visualization_msgs::Marker line_list)
+{
+	line_list.header.frame_id  = "/map";
+	line_list.header.stamp = ros::Time::now();
+	line_list.ns = "lines";
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.pose.orientation.w  = 1.0;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.scale.x = 0.02;
+	line_list.color.g = 1.0f;
+	line_list.color.a = 1.0;
+	vizLine_pub.publish(line_list);
 }
