@@ -21,8 +21,6 @@ int main(int argc, char **argv)
 	kdtree mytree;
 	mytree.construct(test_map);*/
 
-
-
 	ros::spin();
 	return 0;
 }

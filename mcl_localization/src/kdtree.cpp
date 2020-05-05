@@ -11,8 +11,7 @@ void kdtree::construct(vector<vector<double> > map)
 	
 	int size = map.size();
 	int midIndex = size / 2;
-	//sort(map.begin(), map.end(),&kdtree::compareX);
-	sort(map.begin(), map.end(), [](const vector<double>& v1, const vector<double>& v2)
+	sort(map.begin(), map.end(), [](const vector<double>& v1, const vector<double>& v2) //sorting the map alone x
 	{ 
 		return v1[0] < v2[0]; 
 	});
@@ -174,7 +173,6 @@ NNpoint kdtree::nearestRecursive(Node *node, double max_dist)
 	{
 		nearestDist = nnpointFar.nearest_dist;
 		nearestPoint = nnpointFar.nearest_point;
-
 	}
 
 	NNpoint result;

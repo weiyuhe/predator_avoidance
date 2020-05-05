@@ -1,4 +1,6 @@
 #include "mcl.h"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #define X_OFFSET 9
 #define Y_OFFSET 9.95
 
@@ -31,11 +33,18 @@ void mcl::init()
 		p.weight = 0;
 		Particles.push_back(p);
 
+		//convert from euler to quaternion
+		tf2::Quaternion quat_tf;
+		quat_tf.setRPY( 0, 0, p.theta );
+		geometry_msgs::Quaternion quat_msg;
+		tf2::convert(quat_msg , quat_tf);
+
 		geometry_msgs::Point gp;
 		gp.x = p.x;
 		gp.y = p.y;
 		gp.z = 0.2;
 		visPoint.points.push_back(gp);
+
 		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
 	}
