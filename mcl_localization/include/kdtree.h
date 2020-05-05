@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <limits>
 
-using namespace std;
+#ifndef KDTREE_H
+#define KDTREE_H
 
+using namespace std;
 
 struct Node 
 {
@@ -47,3 +49,5 @@ public:
 
 	Node *root;
 };
+
+#endif

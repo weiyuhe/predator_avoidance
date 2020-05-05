@@ -210,7 +210,9 @@ target_link_libraries(run_mcl ${catkin_LIBRARIES})
 
 add_library(kdtree src/kdtree.cpp)
 add_library(get_map src/get_map.cpp)
+add_library(mclcpp src/mcl.cpp)
 
 target_link_libraries(get_map kdtree)
 target_link_libraries(run_mcl kdtree)
 target_link_libraries(run_mcl get_map)
+target_link_libraries(run_mcl mclcpp)
