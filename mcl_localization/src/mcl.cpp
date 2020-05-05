@@ -40,6 +40,7 @@ void mcl::init()
 
 	}
 
+	//visulize initial particles
 	while(ros::ok())
 	{
 		visulizePoint(visPoint);

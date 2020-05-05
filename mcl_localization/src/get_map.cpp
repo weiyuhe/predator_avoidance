@@ -78,11 +78,11 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	points1.points.push_back(p2);
 	scale = 0.2;
 
-
-	while(ros::ok())
+	//publish points
+	/*while(ros::ok())
 	{
 		pub_points(points1, scale);
-	}
+	}*/
 
 }
 

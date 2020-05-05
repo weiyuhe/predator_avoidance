@@ -29,7 +29,7 @@ void kdtree::construct(vector<vector<double> > map)
 		else
 			right.push_back(*it);
 	}
-	right.erase(right.begin());
+	right.erase(right.begin()); //erase the pivot
 
 	if(root == nullptr)
 	{
@@ -51,10 +51,11 @@ void kdtree::construct(vector<vector<double> > map)
 Node *kdtree::construcRecursive( vector<vector<double> > sub_map, int depth)
 {
 	int size = sub_map.size();
+	int dimension = depth%2;
 	if(size == 1) // leaf, end recursion
 	{
 		Node *node = new Node;
-		node->axis = depth%2;
+		node->axis = dimension;
 		node->left = nullptr;
 		node->right = nullptr;
 		node->xy = sub_map[0];
@@ -63,7 +64,6 @@ Node *kdtree::construcRecursive( vector<vector<double> > sub_map, int depth)
 		//cout<<"leaf x: "<<sub_map[0][0]<<" leaf y: "<<sub_map[0][1]<<endl;
 		return node;
 	}
-	int dimension = depth%2;
 	
 	//sort(sub_map.begin(), sub_map.end(),&kdtree::compareX);
 	sort(sub_map.begin(), sub_map.end(), [dimension](const vector<double>& v1, const vector<double>& v2)
@@ -87,20 +87,20 @@ Node *kdtree::construcRecursive( vector<vector<double> > sub_map, int depth)
 	}
 
 
-	if(size == 2)
+	if(size == 2) //special cases, you only have two node left
 	{
 		Node *node = new Node;
-		node->axis = depth%2;
+		node->axis = dimension;
 		node->left = construcRecursive(left, depth+1);
 		node->right = nullptr;
 		node->xy = sub_map[midIndex];
 		return node;
 	}
 
-    right.erase(right.begin());
+    right.erase(right.begin()); //erase the pivot
 
 	Node *node = new Node;
-	node->axis = depth%2;
+	node->axis = dimension;
 	node->left = construcRecursive( left, depth + 1);
 	node->right = construcRecursive( right, depth + 1);
 	node->xy =  sub_map[midIndex];
