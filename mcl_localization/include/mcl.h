@@ -7,11 +7,12 @@
 #include <cmath>
 #include <visualization_msgs/Marker.h>
 #include "kdtree.h"
+#include "get_map.h"
 
 using namespace std;
 struct particle
 {
-	float x; //in mter
+	float x; //in meter
 	float y;
 	float theta; // in rad/s
 	float weight;
@@ -21,8 +22,6 @@ class mcl
 {
 private:
 	vector<vector<double> > occupied_map;
-	ros::Subscriber laserSub;
-	ros::Subscriber odomSub;
 	ros::Publisher vizPoint_pub;
 	ros::Publisher vizLine_pub;
 	//ros::Publisher odomPub;
@@ -36,6 +35,7 @@ private:
 	const float m_per_pixel;
 	visualization_msgs::Marker visPoints;
 	visualization_msgs::Marker visLines;
+	visualization_msgs::Marker points1;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);
@@ -48,6 +48,7 @@ public:
 	void odom_to_map();
 	void visulizePoint(visualization_msgs::Marker points);
 	void visulizeLine(visualization_msgs::Marker line_list);
+	vector<vector<double> > occMap;
 
 };
 

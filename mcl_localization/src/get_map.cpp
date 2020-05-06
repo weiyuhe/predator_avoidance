@@ -13,11 +13,15 @@ map_class::map_class(ros::NodeHandle* nodehandle):n(*nodehandle)
 {
 	occupied = 0;
 	map_sub = n.subscribe("map",2000, &map_class::map_callback,this);
+	cout<<"A"<<endl;
+	
 	marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+	cout<<"B"<<endl;
 }
 
 void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
+	cout<<"C"<<endl;
 	std_msgs::Header header = msg->header;
 	nav_msgs::MapMetaData info = msg->info;
 	visualization_msgs::Marker points;
@@ -38,7 +42,6 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 				
 				//ROS_INFO("Number of occupied is: %i", occupied);
 				//ROS_INFO("map data index: ", msg->data[x+ info.width * y]);
-				
 
 				vector<double> row;
 				row.push_back(x*0.1 - X_OFFSET);
@@ -57,11 +60,12 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 			}
 		}
 	}
-	
 
-	kdtree mytree;
-	mytree.construct(occupiedMatrix);
-	vector<double> testPoint{ 0, 5 };
+	cout<<"OccupiedMatrix size: "<<occupiedMatrix.size()<<endl;
+	
+	/*kdtree mytree;
+	mytree.construct(occupiedMatrix);*/
+	/*vector<double> testPoint{ 0, 5 };
 	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
 	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
 	cout<<" nearest distance: "<< testNNPoint.nearest_dist<<endl;
@@ -76,16 +80,19 @@ void map_class::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	p1.z = p2.z = 0.1;
 	points1.points.push_back(p1);
 	points1.points.push_back(p2);
-	scale = 0.2;
+	scale = 0.2;*/
 
 	//publish points
 	/*while(ros::ok())
 	{
 		pub_points(points1, scale);
 	}*/
-
 }
+/*vector<vector<double> > map_class::getMatrix()
+{
 
+	return occupiedMatrix;
+}*/
 void map_class::pub_points(visualization_msgs::Marker points, float scale)
 {
 	points.header.frame_id  = "/map";

@@ -5,26 +5,26 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "run_mcl");
-  ros::NodeHandle nh_;
-  //map_class mapclass(&nh_);
+	ros::init(argc, argv, "run_mcl");
+	ros::NodeHandle nh_;
+/*	ros::Rate loop_rate(10);
+	map_class mapclass(&nh_);
+	while(ros::ok())
+	{
+		vector<vector<double> > occMap = mapclass.occupiedMatrix;
+		if(occMap.size() > 0)
+		{
+			cout<<"exiting"<<endl;
+			break;
+		}
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+	vector<vector<double> > occMap = mapclass.occupiedMatrix;
+	cout<<"occMap size: "<<occMap.size()<<endl;*/
 
-/*  mcl mclClass(&nh_);
-  mclClass.init();*/
+	mcl mclClass(&nh_);
 
-  mclSub sub(&nh_);
-
-  /*vector<vector<double> > test_map{ { 1, 2 },
-                    { 4, 5 },
-                    { 7, 4 },
-                    { 3, 8 },
-                    { 8, 9 },
-                    {10, 15},
-                    { 2, 7 },
-                    {20, 18}};
-  kdtree mytree;
-  mytree.construct(test_map);*/
-
-  ros::spin();
-  return 0;
+	ros::spin();
+	return 0;
 }

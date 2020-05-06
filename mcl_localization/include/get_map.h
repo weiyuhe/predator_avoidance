@@ -28,6 +28,8 @@ public:
 
 	void pub_points(visualization_msgs::Marker points, float scale);
 
+	//vector<vector<double> > getMatrix();
+
 	vector<vector<double> > occupiedMatrix;
 
 };

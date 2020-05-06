@@ -12,8 +12,47 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
 	num_particles = 500;
 	//TODO: load map and kdtree
-	init();
+	
 	//loadmap_kdtree();
+	ros::Rate loop_rate(10);
+	map_class getmap(&n_);
+	while(ros::ok())
+	{
+		occMap = getmap.occupiedMatrix;
+		if(occMap.size() > 0)
+		{
+			cout<<"exiting"<<endl;
+			break;
+		}
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+	//occMap = getmap.occupiedMatrix;
+	kdtree mytree;
+	cout<<"occMap size is : "<<occMap.size()<<endl;
+	mytree.construct(occMap);
+
+	vector<double> testPoint{ -5, -2 };
+	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
+	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
+	cout<<" nearest distance: "<< testNNPoint.nearest_dist<<endl;
+
+	
+	geometry_msgs::Point p1;
+	geometry_msgs::Point p2;
+	p1.x = testPoint[0];
+	p1.y = testPoint[1];
+	p2.x = testNNPoint.nearest_point[0];
+	p2.y = testNNPoint.nearest_point[1];
+	p1.z = p2.z = 0.1;
+	visPoints.points.push_back(p1);
+	visPoints.points.push_back(p2);
+	init();
+	/*while(ros::ok())
+	{
+		vizPoint_pub.publish(visPoints);
+		//cout<<"publishing"<<endl;
+	}*/
 
 }
 
@@ -48,7 +87,7 @@ void mcl::init()
 		gp.x = p.x;
 		gp.y = p.y;
 		gp.z = 0.2;
-		visPoints.points.push_back(gp);
+		//visPoints.points.push_back(gp);
 		visLines.points.push_back(gp);
 		gp.x = gp.x + 0.5*cos(p.theta);
 		gp.y = gp.y + 0.5*sin(p.theta);
@@ -58,17 +97,16 @@ void mcl::init()
 
 	}
 
-	//visulize initial particles
 	while(ros::ok())
 	{
-		//visulizePoint(visPoints);
-		visulizeLine(visLines);
+		visulizePoint(visPoints);
+		//visulizeLine(visLines);
 	}
 }
 
 void mcl::predictionUpdate()
 {
-
+	//TODO: increment particles x,y and theta give odom, store last odom
 }
 
 void mcl::measurementUpdate()

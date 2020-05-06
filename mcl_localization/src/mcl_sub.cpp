@@ -3,9 +3,9 @@
 mclSub::mclSub(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 {
 	odom_sub.subscribe(nh_, "odom", 1);
-    scan_sub.subscribe(nh_, "scan", 1);
-    sync_.reset(new Sync(MySyncPolicy(10), odom_sub, scan_sub));
-    sync_->registerCallback(boost::bind(&mclSub::callback, this, _1, _2));
+	scan_sub.subscribe(nh_, "scan", 1);
+	sync_.reset(new Sync(MySyncPolicy(10), odom_sub, scan_sub));
+	sync_->registerCallback(boost::bind(&mclSub::callback, this, _1, _2));
 
 	/*message_filters::Subscriber<nav_msgs::Odometry> odom_sub(nh, "/odom", 1); //100?
 	message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub(nh, "/scan", 1);
