@@ -10,7 +10,10 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	odomSub = n_.subscribe("odom",2000, &mcl::odomCallback,this);*/
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
-	num_particles = 1500;
+	num_particles = 500;
+	//TODO: load map and kdtree
+	init();
+	//loadmap_kdtree();
 
 }
 
@@ -35,17 +38,17 @@ void mcl::init()
 		Particles.push_back(p);
 
 		//convert from euler to quaternion
-		tf2::Quaternion quat_tf;
+		/*tf2::Quaternion quat_tf;
 		quat_tf.setRPY( 0, 0, p.theta );
 		geometry_msgs::Quaternion quat_msg;
-		tf2::convert(quat_msg , quat_tf);
+		tf2::convert(quat_msg , quat_tf);*/
 
+		//For visuzalization
 		geometry_msgs::Point gp;
 		gp.x = p.x;
 		gp.y = p.y;
 		gp.z = 0.2;
 		visPoints.points.push_back(gp);
-
 		visLines.points.push_back(gp);
 		gp.x = gp.x + 0.5*cos(p.theta);
 		gp.y = gp.y + 0.5*sin(p.theta);

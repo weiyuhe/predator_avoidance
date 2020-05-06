@@ -1,11 +1,11 @@
+#ifndef GET_MAP_H
+#define GET_MAP_H
+
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include "std_msgs/Header.h"
 #include <visualization_msgs/Marker.h>
 #include <vector>
-
-#ifndef GET_MAP_H
-#define GET_MAP_H
 
 using namespace std;
 

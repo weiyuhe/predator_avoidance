@@ -1,12 +1,12 @@
+#ifndef MCL_H
+#define MCL_H
+
 #include <ros/ros.h>
 #include <vector>
 #include <random>
 #include <cmath>
 #include <visualization_msgs/Marker.h>
 #include "kdtree.h"
-
-#ifndef MCL_H
-#define MCL_H
 
 using namespace std;
 struct particle

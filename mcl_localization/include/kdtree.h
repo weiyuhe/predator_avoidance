@@ -1,12 +1,12 @@
+#ifndef KDTREE_H
+#define KDTREE_H
+
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <iterator>
 #include <algorithm>
 #include <limits>
-
-#ifndef KDTREE_H
-#define KDTREE_H
 
 using namespace std;
 
