@@ -17,8 +17,8 @@ class mclSub
 {
 private:
 	ros::NodeHandle nh_;
-	message_filters::Subscriber<nav_msgs::Odometry> sub_1_;
-	message_filters::Subscriber<sensor_msgs::LaserScan> sub_2_;
+	message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
+	message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
 
 	typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, sensor_msgs::LaserScan> MySyncPolicy;
 	typedef message_filters::Synchronizer<MySyncPolicy> Sync;
