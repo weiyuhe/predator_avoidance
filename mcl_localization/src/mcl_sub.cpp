@@ -17,5 +17,6 @@ mclSub::mclSub(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
 void mclSub::callback(const nav_msgs::Odometry::ConstPtr& odom, const sensor_msgs::LaserScan::ConstPtr& scan)
 {
-	ROS_INFO(" Inside Synchronizer Callback");
+	//ROS_INFO(" Inside Synchronizer Callback");
+	cout<<"odom timestamp: "<< odom->header.stamp.toSec()<<" scan timestamp: "<<scan->header.stamp.toSec()<<endl;
 }
