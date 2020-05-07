@@ -1,19 +1,19 @@
 #include "mcl.h"
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 
 #define X_OFFSET 9
 #define Y_OFFSET 9.95
 
+mcl::mcl():xmin(0),xmax(180),ymin(0),ymax(200),m_per_pixel(0.1)
+{}
+
 mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),ymax(200),m_per_pixel(0.1)
 {
-	/*laserSub = n_.subscribe("scan",2000, &mcl::laserCallback,this);
-	odomSub = n_.subscribe("odom",2000, &mcl::odomCallback,this);*/
+
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
+	gen.seed(rd());
 	num_particles = 500;
-	//TODO: load map and kdtree
-	
-	//loadmap_kdtree();
 	ros::Rate loop_rate(10);
 	map_class getmap(&n_);
 	while(ros::ok())
@@ -31,7 +31,7 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	kdtree mytree;
 	cout<<"occMap size is : "<<occMap.size()<<endl;
 	mytree.construct(occMap);
-
+/*
 	vector<double> testPoint{ -5, -2 };
 	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
 	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
@@ -46,8 +46,8 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	p2.y = testNNPoint.nearest_point[1];
 	p1.z = p2.z = 0.1;
 	visPoints.points.push_back(p1);
-	visPoints.points.push_back(p2);
-	init();
+	visPoints.points.push_back(p2);*/
+	//init();
 	/*while(ros::ok())
 	{
 		vizPoint_pub.publish(visPoints);
@@ -67,6 +67,8 @@ float mcl::getRand(float min, float max)
 
 void mcl::init()
 {
+	visualization_msgs::Marker visPoints;
+	visualization_msgs::Marker visLines;
 	for(int i = 0; i < num_particles; i++)
 	{
 		particle p;
@@ -97,16 +99,88 @@ void mcl::init()
 
 	}
 
-	while(ros::ok())
+	/*while(ros::ok())
 	{
 		visulizePoint(visPoints);
 		//visulizeLine(visLines);
-	}
+	}*/
 }
 
-void mcl::predictionUpdate()
+//sample motion model: p24 on http://ais.informatik.uni-freiburg.de/teaching/ss11/robotics/slides/06-motion-models.pdf
+void mcl::predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom)
 {
+	visualization_msgs::Marker visPoints;
+	visualization_msgs::Marker visLines;
 	//TODO: increment particles x,y and theta give odom, store last odom
+	float x = odom->pose.pose.position.x;
+	float y = odom->pose.pose.position.y;
+	tf::Quaternion quat(odom->pose.pose.orientation.x, 
+						odom->pose.pose.orientation.y, 
+						odom->pose.pose.orientation.z, 
+						odom->pose.pose.orientation.w);
+	tf::Matrix3x3 mat(quat);
+	double roll, pitch, yaw;
+	mat.getRPY(roll, pitch, yaw);
+	vector<float> pose{ x , y ,(float)yaw };
+
+	if(last_pose.size() == 0)
+	{
+		cout<<" Receiving first odometry."<<endl;
+		last_pose = pose;
+		return;
+	}
+	
+	float delta_x = x - last_pose[0];
+	float delta_y = y - last_pose[1];
+	float tran = sqrt(delta_y*delta_y + delta_x*delta_x);
+
+	//handle rotations
+	float rot1 = atan2(delta_y,delta_x) - last_pose[2];
+	rot1 = normalize(rot1);
+	if(tran < 0.01) //if the robot is rotating only
+	{
+		rot1 = 0.0;
+	}
+	float rot2 = pose[2] - last_pose[2] - rot1;
+	rot2 = normalize(rot2);
+	//cout<<"rot1: "<<rot1<<endl;
+	//cout<<"rot2: "<<rot2<<endl;
+
+	//Motion noise parameters: [alpha1, alpha2, alpha3, alpha4]
+	vector<float> alphas{0.1, 0.1, 0.05, 0.05};
+	float sigma_rot1 = alphas[0] * fabs(rot1) + alphas[1] * tran;
+	float sigma_trans = alphas[2] * tran + alphas[3] * (fabs(rot1) + fabs(rot2));
+	float sigma_rot2 = alphas[0] * fabs(rot2) + alphas[1] * tran;
+
+	for(int i = 0; i < num_particles; i++)
+	{
+		normal_distribution<float> norm_trans(0,sigma_trans);
+		normal_distribution<float> norm_rot1(0,sigma_rot1);
+		normal_distribution<float> norm_rot2(0,sigma_rot2);
+
+		float tran_noised = tran + norm_trans(gen); 
+		float rot1_noised = rot1 + norm_rot1(gen);
+		float rot2_noised = rot2 + norm_rot2(gen);
+		//cout<<"tran_noised: "<<tran_noised<<endl;
+		//cout<<"Particles.x: "<<Particles[i].x<<endl;
+
+		Particles[i].x += tran * cos(normalize(Particles[i].theta + rot1_noised));
+		Particles[i].y += tran * sin(normalize(Particles[i].theta + rot1_noised));
+		Particles[i].theta += (rot1_noised + rot2_noised);
+		Particles[i].theta = normalize(Particles[i].theta);
+		geometry_msgs::Point gp;
+		gp.x = Particles[i].x;
+		gp.y = Particles[i].y;
+		gp.z = 0.2;
+		//visPoints.points.push_back(gp);
+		visLines.points.push_back(gp);
+		gp.x = gp.x + 0.5*cos(Particles[i].theta);
+		gp.y = gp.y + 0.5*sin(Particles[i].theta);
+		visLines.points.push_back(gp);
+	}
+	visulizeLine(visLines);
+
+	last_pose = pose;
 }
 
 void mcl::measurementUpdate()
@@ -115,7 +189,7 @@ void mcl::measurementUpdate()
 }
 
 //Algorthm: page 12 on https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/ScanMatching.pdf
-float mcl::likelihood_field_range_finder(float zt, float xt, vector<vector<double> > map)
+double mcl::likelihood_field_range_finder(float zt, float xt, vector<vector<double> > map)
 {
 
 }
@@ -157,4 +231,16 @@ void mcl::visulizeLine(visualization_msgs::Marker line_list)
 	line_list.color.g = 1.0f;
 	line_list.color.a = 1.0;
 	vizLine_pub.publish(line_list);
+}
+
+float mcl::normalize(float angle)
+{
+	if(angle < -M_PI)
+	{
+		return angle + 2.0 * M_PI;
+	}
+	else
+	{
+		return angle > M_PI ? angle - 2.0 * M_PI : angle;
+	}
 }

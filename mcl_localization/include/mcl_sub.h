@@ -10,6 +10,10 @@
 #include <sensor_msgs/LaserScan.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+
+#include <tf/tf.h>
+#include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
 #include "mcl.h"
 
 using namespace std;
@@ -19,10 +23,12 @@ private:
 	ros::NodeHandle nh_;
 	message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
 	message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
-
 	typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, sensor_msgs::LaserScan> MySyncPolicy;
 	typedef message_filters::Synchronizer<MySyncPolicy> Sync;
 	boost::shared_ptr<Sync> sync_;
+	mcl monte;
+
+	vector<particle> pArray;
 
 public:
 	mclSub(ros::NodeHandle* nodehandle);
