@@ -13,7 +13,7 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
 	gen.seed(rd());
-	num_particles = 500;
+	num_particles = 600;
 	ros::Rate loop_rate(10);
 	map_class getmap(&n_);
 	while(ros::ok())
