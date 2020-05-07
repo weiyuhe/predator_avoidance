@@ -1,3 +1,3 @@
 # predator_avoidance
 
-![](~/Videos/only_prediction.gif)
+![prediction](https://raw.githubusercontent.com/weiyuhe/predator_avoidance/master/mcl_localization/only_prediction.gif)
