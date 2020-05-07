@@ -1,3 +1,3 @@
 # predator_avoidance
 
-![](only_prediction.gif)
+![](~/Videos/only_prediction.gif)
