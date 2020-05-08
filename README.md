@@ -1,6 +1,6 @@
 # predator_avoidance
 Work in progress...
 
-## With only prediction
+## Monte Carlos Localization (with Lidar)
 
-![prediction](https://raw.githubusercontent.com/weiyuhe/predator_avoidance/master/mcl_localization/only_prediction.gif)
+![prediction](https://raw.githubusercontent.com/weiyuhe/predator_avoidance/master/mcl_localization/full_mcl1.gif)
