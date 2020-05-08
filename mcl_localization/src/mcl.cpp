@@ -39,28 +39,6 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	//occMap = getmap.occupiedMatrix;
 	cout<<"occMap size is : "<<occMap.size()<<endl;
 	mytree.construct(occMap);
-/*
-	vector<double> testPoint{ -5, -2 };
-	NNpoint testNNPoint = mytree.nearestNeighbor(testPoint);
-	cout<<" nearest point: x: "<< testNNPoint.nearest_point[0]<<" y: "<<testNNPoint.nearest_point[1]<<endl;
-	cout<<" nearest distance: "<< testNNPoint.nearest_dist<<endl;
-
-	
-	geometry_msgs::Point p1;
-	geometry_msgs::Point p2;
-	p1.x = testPoint[0];
-	p1.y = testPoint[1];
-	p2.x = testNNPoint.nearest_point[0];
-	p2.y = testNNPoint.nearest_point[1];
-	p1.z = p2.z = 0.1;
-	visPoints.points.push_back(p1);
-	visPoints.points.push_back(p2);*/
-	//init();
-	/*while(ros::ok())
-	{
-		vizPoint_pub.publish(visPoints);
-		//cout<<"publishing"<<endl;
-	}*/
 
 }
 
@@ -86,12 +64,6 @@ void mcl::init()
 		p.weight = 0.0;
 		Particles.push_back(p);
 
-		//convert from euler to quaternion
-		/*tf2::Quaternion quat_tf;
-		quat_tf.setRPY( 0, 0, p.theta );
-		geometry_msgs::Quaternion quat_msg;
-		tf2::convert(quat_msg , quat_tf);*/
-
 		//For visuzalization
 /*		geometry_msgs::Point gp;
 		gp.x = p.x;
@@ -102,8 +74,6 @@ void mcl::init()
 		gp.x = gp.x + 0.5*cos(p.theta);
 		gp.y = gp.y + 0.5*sin(p.theta);
 		visLines.points.push_back(gp);*/
-
-		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
 	}
 	map_x_min = xmin * m_per_pixel - X_OFFSET;
@@ -255,13 +225,9 @@ float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 		}
 
 		float theta_map = i *  step * ang_inc + ang_min + lidar_theta; 
-		/*if(i == 30)
-		{
-			cout<<"theta_map: "<<theta_map - lidar_theta<<endl;
-			return 0;
-		}*/
 		double end_x = lidar_x + zt[i] * cos(theta_map);
 		double end_y = lidar_y + zt[i] * sin(theta_map);
+
 		vector<double> findpoint{ end_x, end_y };
 		NNpoint closePoint = mytree.nearestNeighbor(findpoint);
 		float dx = end_x - closePoint.nearest_point[0];
@@ -269,16 +235,15 @@ float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 		float dist = sqrt(dx * dx + dy * dy);
 
 		float q_hit = zhit * exp(-(dist*dist)/(2.0*sigma_hit*sigma_hit)) / (sigma_hit * sqrt(2.0*M_PI));
-		float q_rand = zt[i] < range_max ? zrand * 1.0/range_max : 0;
+		float q_rand = zrand * 1.0/range_max : 0;
 		float q_max = zt[i] == range_max ? zmax : 0;
 
 		q = q + q_hit + q_rand + q_max;
 	}
 
 	return q;
-
-
 }
+
 //using sampling wheel technique; Low variance sampling will also work
 void mcl::resampling()
 {
@@ -300,7 +265,6 @@ void mcl::resampling()
 	}
 
 	Particles = newParticles;
-
 
 }
 
@@ -361,23 +325,11 @@ void mcl::normalizeWeight()
 	for(int i = 0; i < num_particles; i++)
 	{
 		Particles[i].weight /= total_weight;
-		//cout<<i<<" th particle's weight: "<<Particles[i].weight<<endl;
 		if(Particles[i].weight > max_weight)
 		{
 			max_weight = Particles[i].weight;
 			max_index = i;
 		}
 	}
-
-	cout<<"max weight: "<<max_weight<<" index: "<<max_index<<endl;
-/*	geometry_msgs::Point gp;
-	gp.x = Particles[max_index].x;
-	gp.y = Particles[max_index].y;
-	gp.z = 0.2;
-	//visPoints.points.push_back(gp);
-	visLines.points.push_back(gp);
-	gp.x = gp.x + 0.5*cos(Particles[max_index].theta);
-	gp.y = gp.y + 0.5*sin(Particles[max_index].theta);
-	visLines.points.push_back(gp);
-	visulizeLine(visLines);*/
+	//cout<<"max weight: "<<max_weight<<" index: "<<max_index<<endl;
 }
