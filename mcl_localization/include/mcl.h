@@ -21,7 +21,7 @@ struct particle
 	float x; //in meter
 	float y;
 	float theta; // in rad/s
-	double weight;
+	float weight;
 };
 
 class mcl
@@ -48,9 +48,9 @@ private:
 	float map_x_max;
 	float map_y_min;
 	float map_y_max;
-	double ang_min;
-	double ang_max;
-	double ang_inc;
+	float ang_min;
+	float ang_max;
+	float ang_inc;
 	float range_max;
 	float range_min;
 	float step;
@@ -58,7 +58,7 @@ private:
 	float zrand;
 	float zmax;
 	float sigma_hit;
-	double total_weight;
+	float total_weight;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);
@@ -66,7 +66,7 @@ public:
 	float getRand(float min, float max);
 	void predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom);
 	void measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan);
-	double likelihood_field_range_finder(vector<float> zt, particle p);
+	float likelihood_field_range_finder(vector<float> zt, particle p);
 	void resampling();
 	void odom_to_map();
 	void visulizePoint(visualization_msgs::Marker points);

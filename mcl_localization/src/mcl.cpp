@@ -206,7 +206,7 @@ void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 
 	//subsample the incoming scan
 	vector<float > downsample_range; //meter
-	vector<double > downsample_angle; //radian
+	vector<float > downsample_angle; //radian
 	for(int i = 0; i< size; i+=size/downsample_num)
 	{
 		downsample_range.push_back(scan->ranges[i]);
@@ -224,7 +224,7 @@ void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 	total_weight = 0.0;
 	for(int i = 0; i < num_particles; i++)
 	{
-		double weight = likelihood_field_range_finder(downsample_range, Particles[i]);
+		float weight = likelihood_field_range_finder(downsample_range, Particles[i]);
 		Particles[i].weight = weight;
 		total_weight += weight;
 	}
@@ -233,13 +233,13 @@ void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 }
 
 //Algorthm: page 12 on https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/ScanMatching.pdf
-double mcl::likelihood_field_range_finder(vector<float> zt, particle p)
+float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 {
 	double q = 1;
 	//position of the Lidar in the map frame
 	float lidar_x = p.x + (LIDAR_X_OFFSET * cos(p.theta));
 	float lidar_y = p.y + (LIDAR_X_OFFSET * sin(p.theta));
-	double lidar_theta = p.theta;
+	float lidar_theta = p.theta;
 
 	if(lidar_x <= map_x_min || lidar_x >= map_x_max || lidar_y <= map_y_min || lidar_y >= map_y_max) //lidar is outside the map
 	{
@@ -253,7 +253,7 @@ double mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 			continue;
 		}
 
-		double theta_map = i *  step * ang_inc + ang_min + lidar_theta; 
+		float theta_map = i *  step * ang_inc + ang_min + lidar_theta; 
 		/*if(i == 30)
 		{
 			cout<<"theta_map: "<<theta_map - lidar_theta<<endl;
@@ -263,13 +263,13 @@ double mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 		double end_y = lidar_y + zt[i] * sin(theta_map);
 		vector<double> findpoint{ end_x, end_y };
 		NNpoint closePoint = mytree.nearestNeighbor(findpoint);
-		double dx = end_x - closePoint.nearest_point[0];
-		double dy = end_y - closePoint.nearest_point[1];
-		double dist = sqrt(dx * dx + dy * dy);
+		float dx = end_x - closePoint.nearest_point[0];
+		float dy = end_y - closePoint.nearest_point[1];
+		float dist = sqrt(dx * dx + dy * dy);
 
-		double q_hit = zhit * exp(-(dist*dist)/(2.0*sigma_hit*sigma_hit)) / (sigma_hit * sqrt(2.0*M_PI));
-		double q_rand = zt[i] < range_max ? zrand * 1.0/range_max : 0;
-		double q_max = zt[i] == range_max ? zmax : 0;
+		float q_hit = zhit * exp(-(dist*dist)/(2.0*sigma_hit*sigma_hit)) / (sigma_hit * sqrt(2.0*M_PI));
+		float q_rand = zt[i] < range_max ? zrand * 1.0/range_max : 0;
+		float q_max = zt[i] == range_max ? zmax : 0;
 
 		q = q + q_hit + q_rand + q_max;
 	}
