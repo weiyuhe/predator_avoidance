@@ -14,13 +14,13 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
 
-	downsample_num = 60;
-	num_particles = 300;
+	downsample_num = 10;
+	num_particles = 1000;
 	ros::Rate loop_rate(10);
-	zhit = 0.9;
-	zrand = 0.05;
+	zhit = 0.85;
+	zrand = 0.10;
 	zmax = 0.05;
-	sigma_hit = 0.3;
+	sigma_hit = 0.9;
 
 	gen.seed(rd());
 
@@ -66,9 +66,9 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 
 float mcl::getRand(float min, float max)
 {
-	static default_random_engine generator;
+	//static default_random_engine generator;
 	uniform_real_distribution<float> distribution(min, max);
-	float number = distribution(generator); //in pixel
+	float number = distribution(gen); //in pixel
 	return number;
 
 }
@@ -93,7 +93,7 @@ void mcl::init()
 		tf2::convert(quat_msg , quat_tf);*/
 
 		//For visuzalization
-		geometry_msgs::Point gp;
+/*		geometry_msgs::Point gp;
 		gp.x = p.x;
 		gp.y = p.y;
 		gp.z = 0.2;
@@ -101,7 +101,7 @@ void mcl::init()
 		visLines.points.push_back(gp);
 		gp.x = gp.x + 0.5*cos(p.theta);
 		gp.y = gp.y + 0.5*sin(p.theta);
-		visLines.points.push_back(gp);
+		visLines.points.push_back(gp);*/
 
 		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
@@ -190,6 +190,7 @@ void mcl::predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom)
 		visLines.points.push_back(gp);
 	}
 	visulizeLine(visLines);
+	//visulizePoint(visPoints);
 
 	last_pose = pose;
 }
@@ -235,7 +236,7 @@ void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 //Algorthm: page 12 on https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/ScanMatching.pdf
 float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 {
-	double q = 1;
+	double q = 0;
 	//position of the Lidar in the map frame
 	float lidar_x = p.x + (LIDAR_X_OFFSET * cos(p.theta));
 	float lidar_y = p.y + (LIDAR_X_OFFSET * sin(p.theta));
@@ -278,11 +279,32 @@ float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 
 
 }
-
+//using sampling wheel technique; Low variance sampling will also work
 void mcl::resampling()
 {
+	vector<particle> newParticles;
+	int index = getRand(0, num_particles);
+	float beta = 0.0;
+
+	for(int i = 0 ; i < num_particles; i++)
+	{
+		beta += getRand(0, 2*max_weight);
+		while(beta>Particles[index].weight)
+		{
+			beta -= Particles[index].weight;
+			index = (index + 1) % num_particles;
+		}
+
+		particle p = Particles[index];
+		newParticles.push_back(p);
+	}
+
+	Particles = newParticles;
+
 
 }
+
+
 
 void mcl::odom_to_map()
 {
@@ -312,7 +334,7 @@ void mcl::visulizeLine(visualization_msgs::Marker line_list)
 	line_list.action = visualization_msgs::Marker::ADD;
 	line_list.pose.orientation.w  = 1.0;
 	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.02;
+	line_list.scale.x = 0.05;
 	line_list.color.g = 1.0f;
 	line_list.color.a = 1.0;
 	vizLine_pub.publish(line_list);
@@ -332,9 +354,30 @@ float mcl::normalizeAngle(float angle)
 
 void mcl::normalizeWeight()
 {
+	int max_index;
+	max_weight = 0;
+	visualization_msgs::Marker visLines;
+
 	for(int i = 0; i < num_particles; i++)
 	{
 		Particles[i].weight /= total_weight;
-		cout<<i<<" th particle's weight: "<<Particles[i].weight<<endl;
+		//cout<<i<<" th particle's weight: "<<Particles[i].weight<<endl;
+		if(Particles[i].weight > max_weight)
+		{
+			max_weight = Particles[i].weight;
+			max_index = i;
+		}
 	}
+
+	cout<<"max weight: "<<max_weight<<" index: "<<max_index<<endl;
+/*	geometry_msgs::Point gp;
+	gp.x = Particles[max_index].x;
+	gp.y = Particles[max_index].y;
+	gp.z = 0.2;
+	//visPoints.points.push_back(gp);
+	visLines.points.push_back(gp);
+	gp.x = gp.x + 0.5*cos(Particles[max_index].theta);
+	gp.y = gp.y + 0.5*sin(Particles[max_index].theta);
+	visLines.points.push_back(gp);
+	visulizeLine(visLines);*/
 }

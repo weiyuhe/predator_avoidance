@@ -59,6 +59,7 @@ private:
 	float zmax;
 	float sigma_hit;
 	float total_weight;
+	float max_weight;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);

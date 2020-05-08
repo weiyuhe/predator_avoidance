@@ -20,5 +20,6 @@ void mclSub::callback(const nav_msgs::Odometry::ConstPtr& odom, const sensor_msg
 	//cout<<"odom timestamp: "<< odom->header.stamp.toSec()<<" scan timestamp: "<<scan->header.stamp.toSec()<<endl;
 	monte.predictionUpdate(odom);
 	monte.measurementUpdate(scan);
+	monte.resampling();
 	//cout<<"scan range size"<<scan->ranges.size()<<endl;
 }
