@@ -235,7 +235,7 @@ float mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 		float dist = sqrt(dx * dx + dy * dy);
 
 		float q_hit = zhit * exp(-(dist*dist)/(2.0*sigma_hit*sigma_hit)) / (sigma_hit * sqrt(2.0*M_PI));
-		float q_rand = zrand * 1.0/range_max : 0;
+		float q_rand = zrand * 1.0/range_max;
 		float q_max = zt[i] == range_max ? zmax : 0;
 
 		q = q + q_hit + q_rand + q_max;
