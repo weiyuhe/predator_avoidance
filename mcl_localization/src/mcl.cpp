@@ -1,8 +1,9 @@
 #include "mcl.h"
 
 
-#define X_OFFSET 9
+#define X_OFFSET 9 //map offset, meter
 #define Y_OFFSET 9.95
+#define LIDAR_X_OFFSET 0.15 //lidar's x offset w.r.t base_link , in meter
 
 mcl::mcl():xmin(0),xmax(180),ymin(0),ymax(200),m_per_pixel(0.1)
 {}
@@ -12,9 +13,17 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
-	gen.seed(rd());
-	num_particles = 600;
+
+	downsample_num = 60;
+	num_particles = 300;
 	ros::Rate loop_rate(10);
+	zhit = 0.9;
+	zrand = 0.05;
+	zmax = 0.05;
+	sigma_hit = 0.3;
+
+	gen.seed(rd());
+
 	map_class getmap(&n_);
 	while(ros::ok())
 	{
@@ -28,7 +37,6 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 		loop_rate.sleep();
 	}
 	//occMap = getmap.occupiedMatrix;
-	kdtree mytree;
 	cout<<"occMap size is : "<<occMap.size()<<endl;
 	mytree.construct(occMap);
 /*
@@ -75,7 +83,7 @@ void mcl::init()
 		p.x = getRand(xmin, xmax) * m_per_pixel - X_OFFSET; //in meter
 		p.y = getRand(ymin, ymax) * m_per_pixel - Y_OFFSET; 
 		p.theta = getRand(0, 2*M_PI);
-		p.weight = 0;
+		p.weight = 0.0;
 		Particles.push_back(p);
 
 		//convert from euler to quaternion
@@ -98,7 +106,10 @@ void mcl::init()
 		//cout<<"gp: (%f,%f)"<<gp.x<<gp.y<<endl;
 
 	}
-
+	map_x_min = xmin * m_per_pixel - X_OFFSET;
+	map_x_max = xmax * m_per_pixel - X_OFFSET;
+	map_y_min = ymin * m_per_pixel - Y_OFFSET;
+	map_y_max = ymax * m_per_pixel - Y_OFFSET;
 	/*while(ros::ok())
 	{
 		visulizePoint(visPoints);
@@ -136,13 +147,13 @@ void mcl::predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom)
 
 	//handle rotations
 	float rot1 = atan2(delta_y,delta_x) - last_pose[2];
-	rot1 = normalize(rot1);
+	rot1 = normalizeAngle(rot1);
 	if(tran < 0.01) //if the robot is rotating only
 	{
 		rot1 = 0.0;
 	}
 	float rot2 = pose[2] - last_pose[2] - rot1;
-	rot2 = normalize(rot2);
+	rot2 = normalizeAngle(rot2);
 	//cout<<"rot1: "<<rot1<<endl;
 	//cout<<"rot2: "<<rot2<<endl;
 
@@ -164,10 +175,10 @@ void mcl::predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom)
 		//cout<<"tran_noised: "<<tran_noised<<endl;
 		//cout<<"Particles.x: "<<Particles[i].x<<endl;
 
-		Particles[i].x += tran * cos(normalize(Particles[i].theta + rot1_noised));
-		Particles[i].y += tran * sin(normalize(Particles[i].theta + rot1_noised));
+		Particles[i].x += tran * cos(normalizeAngle(Particles[i].theta + rot1_noised));
+		Particles[i].y += tran * sin(normalizeAngle(Particles[i].theta + rot1_noised));
 		Particles[i].theta += (rot1_noised + rot2_noised);
-		Particles[i].theta = normalize(Particles[i].theta);
+		Particles[i].theta = normalizeAngle(Particles[i].theta);
 		geometry_msgs::Point gp;
 		gp.x = Particles[i].x;
 		gp.y = Particles[i].y;
@@ -183,14 +194,88 @@ void mcl::predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom)
 	last_pose = pose;
 }
 
-void mcl::measurementUpdate()
+void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
+	ang_min = scan->angle_min;
+	ang_max = scan->angle_max;
+	ang_inc = scan->angle_increment;
+	range_max = scan->range_max;
+	range_min = scan->range_min;
+	int size = scan->ranges.size();
+	step = size/downsample_num;
 
+	//subsample the incoming scan
+	vector<float > downsample_range; //meter
+	vector<double > downsample_angle; //radian
+	for(int i = 0; i< size; i+=size/downsample_num)
+	{
+		downsample_range.push_back(scan->ranges[i]);
+		downsample_angle.push_back(ang_min + i * ang_inc);
+	}
+	//cout<<"downsample_range size: "<<downsample_range.size()<<" downsample_angles size: "<<downsample_angle.size()<<endl;
+
+	/*cout<<"min angle: "<<downsample_angle[0]<<" max angle: "<<downsample_angle[1]<<endl;
+	for(int i =0;i<downsample_angle.size();i++)
+	{
+		cout<<"i: "<<i<<" angle: "<<downsample_angle[i]<<endl;
+	}
+	cout<<" and one: "<< downsample_angle[59] + (12 * ang_inc)<<endl;*/
+
+	total_weight = 0.0;
+	for(int i = 0; i < num_particles; i++)
+	{
+		double weight = likelihood_field_range_finder(downsample_range, Particles[i]);
+		Particles[i].weight = weight;
+		total_weight += weight;
+	}
+
+	normalizeWeight();
 }
 
 //Algorthm: page 12 on https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/ScanMatching.pdf
-double mcl::likelihood_field_range_finder(float zt, float xt, vector<vector<double> > map)
+double mcl::likelihood_field_range_finder(vector<float> zt, particle p)
 {
+	double q = 1;
+	//position of the Lidar in the map frame
+	float lidar_x = p.x + (LIDAR_X_OFFSET * cos(p.theta));
+	float lidar_y = p.y + (LIDAR_X_OFFSET * sin(p.theta));
+	double lidar_theta = p.theta;
+
+	if(lidar_x <= map_x_min || lidar_x >= map_x_max || lidar_y <= map_y_min || lidar_y >= map_y_max) //lidar is outside the map
+	{
+		return 0.0;
+	}
+
+	for(int i = 0; i < zt.size(); i++)
+	{
+		if(zt[i] > range_max || zt[i] < range_min)
+		{
+			continue;
+		}
+
+		double theta_map = i *  step * ang_inc + ang_min + lidar_theta; 
+		/*if(i == 30)
+		{
+			cout<<"theta_map: "<<theta_map - lidar_theta<<endl;
+			return 0;
+		}*/
+		double end_x = lidar_x + zt[i] * cos(theta_map);
+		double end_y = lidar_y + zt[i] * sin(theta_map);
+		vector<double> findpoint{ end_x, end_y };
+		NNpoint closePoint = mytree.nearestNeighbor(findpoint);
+		double dx = end_x - closePoint.nearest_point[0];
+		double dy = end_y - closePoint.nearest_point[1];
+		double dist = sqrt(dx * dx + dy * dy);
+
+		double q_hit = zhit * exp(-(dist*dist)/(2.0*sigma_hit*sigma_hit)) / (sigma_hit * sqrt(2.0*M_PI));
+		double q_rand = zt[i] < range_max ? zrand * 1.0/range_max : 0;
+		double q_max = zt[i] == range_max ? zmax : 0;
+
+		q = q + q_hit + q_rand + q_max;
+	}
+
+	return q;
+
 
 }
 
@@ -233,7 +318,7 @@ void mcl::visulizeLine(visualization_msgs::Marker line_list)
 	vizLine_pub.publish(line_list);
 }
 
-float mcl::normalize(float angle)
+float mcl::normalizeAngle(float angle)
 {
 	if(angle < -M_PI)
 	{
@@ -242,5 +327,14 @@ float mcl::normalize(float angle)
 	else
 	{
 		return angle > M_PI ? angle - 2.0 * M_PI : angle;
+	}
+}
+
+void mcl::normalizeWeight()
+{
+	for(int i = 0; i < num_particles; i++)
+	{
+		Particles[i].weight /= total_weight;
+		cout<<i<<" th particle's weight: "<<Particles[i].weight<<endl;
 	}
 }

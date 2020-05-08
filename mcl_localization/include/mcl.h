@@ -11,6 +11,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
 #include <random>
+#include <sensor_msgs/LaserScan.h>
 #include "kdtree.h"
 #include "get_map.h"
 
@@ -20,12 +21,13 @@ struct particle
 	float x; //in meter
 	float y;
 	float theta; // in rad/s
-	float weight;
+	double weight;
 };
 
 class mcl
 {
 private:
+	kdtree mytree;
 	vector<vector<double> > occupied_map;
 	ros::Publisher vizPoint_pub;
 	ros::Publisher vizLine_pub;
@@ -41,19 +43,36 @@ private:
 	//visualization_msgs::Marker visLines;
 	std::random_device rd;
 	std::mt19937 gen;
+	int downsample_num;
+	float map_x_min;
+	float map_x_max;
+	float map_y_min;
+	float map_y_max;
+	double ang_min;
+	double ang_max;
+	double ang_inc;
+	float range_max;
+	float range_min;
+	float step;
+	float zhit;
+	float zrand;
+	float zmax;
+	float sigma_hit;
+	double total_weight;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);
 	void init();
 	float getRand(float min, float max);
 	void predictionUpdate(const nav_msgs::Odometry::ConstPtr& odom);
-	void measurementUpdate();
-	double likelihood_field_range_finder(float zt, float xt, vector<vector<double> > map);
+	void measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan);
+	double likelihood_field_range_finder(vector<float> zt, particle p);
 	void resampling();
 	void odom_to_map();
 	void visulizePoint(visualization_msgs::Marker points);
 	void visulizeLine(visualization_msgs::Marker line_list);
-	float normalize(float angle);
+	float normalizeAngle(float angle);
+	void normalizeWeight();
 	vector<vector<double> > occMap;
 	vector<particle> Particles;
 	vector<float> last_pose;
