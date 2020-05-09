@@ -15,7 +15,7 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
 
 	downsample_num = 10;
-	num_particles = 1000;
+	num_particles = 500;
 	ros::Rate loop_rate(10);
 	zhit = 0.85;
 	zrand = 0.10;
@@ -318,9 +318,8 @@ float mcl::normalizeAngle(float angle)
 
 void mcl::normalizeWeight()
 {
-	int max_index;
+	//int max_index;
 	max_weight = 0;
-	visualization_msgs::Marker visLines;
 
 	for(int i = 0; i < num_particles; i++)
 	{
@@ -328,7 +327,7 @@ void mcl::normalizeWeight()
 		if(Particles[i].weight > max_weight)
 		{
 			max_weight = Particles[i].weight;
-			max_index = i;
+			//max_index = i;
 		}
 	}
 	//cout<<"max weight: "<<max_weight<<" index: "<<max_index<<endl;
