@@ -21,5 +21,6 @@ void mclSub::callback(const nav_msgs::Odometry::ConstPtr& odom, const sensor_msg
 	monte.predictionUpdate(odom);
 	monte.measurementUpdate(scan);
 	monte.resampling();
+	monte.publish_odom();
 	//cout<<"scan range size"<<scan->ranges.size()<<endl;
 }

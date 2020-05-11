@@ -3,6 +3,7 @@
 
 #define X_OFFSET 9 //map offset, meter
 #define Y_OFFSET 9.95
+#define GUESS_FACTOR 0.10 //use to restrict initial location of particles
 #define LIDAR_X_OFFSET 0.15 //lidar's x offset w.r.t base_link , in meter
 
 mcl::mcl():xmin(0),xmax(180),ymin(0),ymax(200),m_per_pixel(0.1)
@@ -13,9 +14,10 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 
 	vizPoint_pub = n_.advertise<visualization_msgs::Marker>("mcl_points", 10);
 	vizLine_pub = n_.advertise<visualization_msgs::Marker>("mcl_liness", 10);
+	odomPub = n_.advertise<nav_msgs::Odometry>("/pf/odom", 50);
 
 	downsample_num = 10;
-	num_particles = 500;
+	num_particles = 180;
 	ros::Rate loop_rate(10);
 	zhit = 0.85;
 	zrand = 0.10;
@@ -45,7 +47,7 @@ mcl::mcl(ros::NodeHandle* nodehandle):n_(*nodehandle),xmin(0),xmax(180),ymin(0),
 float mcl::getRand(float min, float max)
 {
 	//static default_random_engine generator;
-	uniform_real_distribution<float> distribution(min, max);
+	uniform_real_distribution<float> distribution( min, max);
 	float number = distribution(gen); //in pixel
 	return number;
 
@@ -60,6 +62,8 @@ void mcl::init()
 		particle p;
 		p.x = getRand(xmin, xmax) * m_per_pixel - X_OFFSET; //in meter
 		p.y = getRand(ymin, ymax) * m_per_pixel - Y_OFFSET; 
+		p.x = GUESS_FACTOR * p.x;
+		p.y = GUESS_FACTOR * p.y;
 		p.theta = getRand(0, 2*M_PI);
 		p.weight = 0.0;
 		Particles.push_back(p);
@@ -183,14 +187,6 @@ void mcl::measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan)
 		downsample_range.push_back(scan->ranges[i]);
 		downsample_angle.push_back(ang_min + i * ang_inc);
 	}
-	//cout<<"downsample_range size: "<<downsample_range.size()<<" downsample_angles size: "<<downsample_angle.size()<<endl;
-
-	/*cout<<"min angle: "<<downsample_angle[0]<<" max angle: "<<downsample_angle[1]<<endl;
-	for(int i =0;i<downsample_angle.size();i++)
-	{
-		cout<<"i: "<<i<<" angle: "<<downsample_angle[i]<<endl;
-	}
-	cout<<" and one: "<< downsample_angle[59] + (12 * ang_inc)<<endl;*/
 
 	total_weight = 0.0;
 	for(int i = 0; i < num_particles; i++)
@@ -268,13 +264,6 @@ void mcl::resampling()
 
 }
 
-
-
-void mcl::odom_to_map()
-{
-	
-}
-
 void mcl::visulizePoint(visualization_msgs::Marker points)
 {
 	points.header.frame_id  = "/map";
@@ -318,7 +307,6 @@ float mcl::normalizeAngle(float angle)
 
 void mcl::normalizeWeight()
 {
-	//int max_index;
 	max_weight = 0;
 
 	for(int i = 0; i < num_particles; i++)
@@ -327,8 +315,35 @@ void mcl::normalizeWeight()
 		if(Particles[i].weight > max_weight)
 		{
 			max_weight = Particles[i].weight;
-			//max_index = i;
 		}
 	}
-	//cout<<"max weight: "<<max_weight<<" index: "<<max_index<<endl;
+}
+
+void mcl::publish_odom()
+{
+	double x = 0.0;
+	double y = 0.0;
+	double theta  = 0.0;
+	for(int i = 0; i < num_particles; i++)
+	{
+		x = x + Particles[i].x * Particles[i].weight;
+		y = y + Particles[i].y * Particles[i].weight;
+		theta = theta + Particles[i].theta * Particles[i].weight;
+	}
+
+	tf::Transform transform;
+	transform.setOrigin( tf::Vector3(x, y, 0.0) );
+	tf::Quaternion q;
+	q.setRPY(0, 0, theta);
+	transform.setRotation(q);
+	geometry_msgs::Quaternion quat = tf::createQuaternionMsgFromYaw(theta);
+
+	nav_msgs::Odometry odom;
+    odom.header.stamp = ros::Time::now();
+    odom.header.frame_id = "/map";
+    odom.pose.pose.position.x = x;
+    odom.pose.pose.position.y = y;
+    odom.pose.pose.position.z = 0.0;
+    odom.pose.pose.orientation = quat;
+    odomPub.publish(odom);
 }

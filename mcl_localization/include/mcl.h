@@ -7,6 +7,7 @@
 #include <cmath>
 #include <visualization_msgs/Marker.h>
 #include <tf/tf.h>
+//#include <tf/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
@@ -31,6 +32,7 @@ private:
 	vector<vector<double> > occupied_map;
 	ros::Publisher vizPoint_pub;
 	ros::Publisher vizLine_pub;
+	ros::Publisher odomPub;
 	//ros::Publisher odomPub;
 	ros::NodeHandle n_;
 	int num_particles;
@@ -60,6 +62,8 @@ private:
 	float sigma_hit;
 	float total_weight;
 	float max_weight;
+	//geometry_msgs::TransformStamped odomPub;
+	//tf::TransformBroadcaster br;
 public:
 	mcl();
 	mcl(ros::NodeHandle* nodehandle);
@@ -69,11 +73,11 @@ public:
 	void measurementUpdate(const sensor_msgs::LaserScan::ConstPtr& scan);
 	float likelihood_field_range_finder(vector<float> zt, particle p);
 	void resampling();
-	void odom_to_map();
 	void visulizePoint(visualization_msgs::Marker points);
 	void visulizeLine(visualization_msgs::Marker line_list);
 	float normalizeAngle(float angle);
 	void normalizeWeight();
+	void publish_odom();
 	vector<vector<double> > occMap;
 	vector<particle> Particles;
 	vector<float> last_pose;

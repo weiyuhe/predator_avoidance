@@ -54,6 +54,7 @@
   <exec_depend>std_msgs</exec_depend>
   <depend>message_filters</depend>
   <depend>sensor_msgs</depend>
+  <depend>tf</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

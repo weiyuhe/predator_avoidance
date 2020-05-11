@@ -9,10 +9,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_filters
   sensor_msgs
+  tf
 )
 
 catkin_package(
-  CATKIN_DEPENDS message_filters roscpp sensor_msgs
+  CATKIN_DEPENDS message_filters roscpp sensor_msgs tf
 )
 
 include_directories(
@@ -30,6 +31,7 @@ add_library(mclcpp src/mcl.cpp)
 add_library(mclsub src/mcl_sub.cpp)
 
 target_link_libraries(mclsub ${catkin_LIBRARIES})
+target_link_libraries(mclcpp ${catkin_LIBRARIES})
 target_link_libraries(get_map kdtree)
 target_link_libraries(mclcpp get_map)
 target_link_libraries(mclsub mclcpp)
